@@ -1,13 +1,15 @@
-const jwt = require('jsonwebtoken'); //importer la bibliothèque
-const { validationResult } = require('express-validator');
-const User = require('../models/User');
-const logger = require('../config/logger');
+const jwt = require("jsonwebtoken"); //importer la bibliothèque
+const { validationResult } = require("express-validator");
+const User = require("../models/User");
+const logger = require("../config/logger");
+const multer = require("multer");
+const upload = multer({ dest: "uploads/" }); // Or configure storage as needed
 
 // Generate JWT token
 //Créer un token JWT pour l’utilisateur : userId (ID unique de l'utilisateur)
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
-    expiresIn: '7d'
+    expiresIn: "7d",
   });
 };
 
@@ -19,13 +21,13 @@ exports.register = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password, role } = req.body;
+    const { name, email, password, phone } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
-        message: 'User already exists with this email'
+        message: "User already exists with this email",
       });
     }
 
@@ -34,7 +36,7 @@ exports.register = async (req, res) => {
       name,
       email,
       password,
-      role
+      phone,
     });
 
     await user.save();
@@ -44,15 +46,15 @@ exports.register = async (req, res) => {
     const token = generateToken(user._id);
 
     res.status(201).json({
-      message: 'User registered successfully',
+      message: "User registered successfully",
       token,
-      user
+      user,
     });
   } catch (error) {
-    logger.error('Registration error:', error);
+    logger.error("Registration error:", error);
     res.status(500).json({
-      message: 'Error registering user',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: "Error registering user",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -71,7 +73,7 @@ exports.login = async (req, res) => {
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(401).json({
-        message: 'Invalid email or password'
+        message: "Invalid email or password",
       });
     }
 
@@ -79,7 +81,7 @@ exports.login = async (req, res) => {
     const isMatch = await user.comparePassword(password);
     if (!isMatch) {
       return res.status(401).json({
-        message: 'Invalid email or password'
+        message: "Invalid email or password",
       });
     }
 
@@ -88,15 +90,15 @@ exports.login = async (req, res) => {
     const token = generateToken(user._id);
 
     res.json({
-      message: 'Logged in successfully',
+      message: "Logged in successfully",
       token,
-      user
+      user,
     });
   } catch (error) {
-    logger.error('Login error:', error);
+    logger.error("Login error:", error);
     res.status(500).json({
-      message: 'Error logging in',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: "Error logging in",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
@@ -105,52 +107,116 @@ exports.login = async (req, res) => {
 exports.getCurrentUser = async (req, res) => {
   try {
     const user = await User.findById(req.user._id) //Cette route nécessite un token valide envoyé par le client : déchiffre le token et ajoute userId à req.use ;  déchiffre le token et ajoute userId à req.use
-      .select('-password')
-      .populate('applications');
-    
+      .select("-password")
+      .populate("applications");
+
     res.json(user);
   } catch (error) {
-    logger.error('Get current user error:', error);
+    logger.error("Get current user error:", error);
     res.status(500).json({
-      message: 'Error getting user data',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: "Error getting user data",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
 
 // Update user profile
-exports.updateProfile = async (req, res) => {
-  try {
-    const updates = Object.keys(req.body);
-    const allowedUpdates = ['name', 'phone', 'location', 'skills', 'education', 'experience'];
-    const isValidOperation = updates.every(update => allowedUpdates.includes(update));
+// exports.updateProfile = async (req, res) => {
+//   console.log("update request", req.body);
+//   try {
+//     const updates = Object.keys(req.body);
+//     const allowedUpdates = [
+//       "name",
+//       "phone",
+//       "email",
+//       "location",
+//       "skills",
+//       "education",
+//       "experience",
+//     ];
+//     const isValidOperation = updates.every((update) =>
+//       allowedUpdates.includes(update)
+//     );
 
-    if (!isValidOperation) {
-      return res.status(400).json({ message: 'Invalid updates' });
-    }
+//     if (!isValidOperation) {
+//       return res.status(400).json({ message: "Invalid updates" });
+//     }
 
-    const user = req.user; //
-    updates.forEach(update => {
-      if (update === 'name') {
-        user[update] = req.body[update];
-      } else {
-        user.profile[update] = req.body[update];
+//     // Validation spécifique pour le champ phone
+//     if (req.body.phone && !/^\d{8}$/.test(req.body.phone)) {
+//       return res
+//         .status(400)
+//         .json({ message: "Phone must be exactly 8 numeric characters" });
+//     }
+
+//     const user = req.user; //
+//     updates.forEach((update) => {
+//       if (update === "name" || update === "email" || update === "phone") {
+//         user[update] = req.body[update];
+//       } else {
+//         user.profile[update] = req.body[update];
+//       }
+//     });
+
+//     await user.save();
+//     res.json({
+//       message: "Profile updated successfully",
+//       user,
+//     });
+//   } catch (error) {
+//     logger.error("Update profile error:", error);
+//     res.status(500).json({
+//       message: "Error updating profile",
+//       error: process.env.NODE_ENV === "development" ? error.message : undefined,
+//     });
+//   }
+// };
+
+exports.updateProfile = [
+  // Middleware to handle file uploads
+  upload.single("resume"), // Assuming "resume" is the field name for the file
+  async (req, res) => {
+    console.log("update request", req.body); // This should now show the form fields
+    console.log("Uploaded file", req.file); // This will show the uploaded file
+
+    try {
+      const updates = Object.keys(req.body);
+
+      // Validation spécifique pour le champ phone
+      if (req.body.phone && !/^\d{8}$/.test(req.body.phone)) {
+        return res
+          .status(400)
+          .json({ message: "Phone must be exactly 8 numeric characters" });
       }
-    });
 
-    await user.save();
-    res.json({
-      message: 'Profile updated successfully',
-      user
-    });
-  } catch (error) {
-    logger.error('Update profile error:', error);
-    res.status(500).json({
-      message: 'Error updating profile',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-};
+      const user = req.user; // Assuming you have middleware to get the authenticated user
+
+      updates.forEach((update) => {
+        user[update] = req.body[update];
+      });
+
+      // Handle the uploaded resume if it exists
+      if (req.file) {
+        // For example, save the file path in the user object
+        user.profile = user.profile || {};
+        user.profile.resume = req.file.path; // Save file path in `profile.resume`      }
+      }
+      await user.save();
+
+      res.json({
+        message: "Profile updated successfully",
+        user,
+      });
+    } catch (error) {
+      logger.error("Update profile error:", error);
+      res.status(500).json({
+        message: "Error updating profile",
+        error:
+          process.env.NODE_ENV === "development" ? error.message : undefined,
+      });
+    }
+  },
+];
 
 // Change password
 exports.changePassword = async (req, res) => {
@@ -161,7 +227,7 @@ exports.changePassword = async (req, res) => {
     const isMatch = await req.user.comparePassword(currentPassword);
     if (!isMatch) {
       return res.status(400).json({
-        message: 'Current password is incorrect'
+        message: "Current password is incorrect",
       });
     }
 
@@ -170,13 +236,13 @@ exports.changePassword = async (req, res) => {
     await req.user.save();
 
     res.json({
-      message: 'Password changed successfully'
+      message: "Password changed successfully",
     });
   } catch (error) {
-    logger.error('Change password error:', error);
+    logger.error("Change password error:", error);
     res.status(500).json({
-      message: 'Error changing password',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      message: "Error changing password",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
     });
   }
 };
