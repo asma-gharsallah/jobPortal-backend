@@ -41,6 +41,7 @@ router.post("/register", registerValidation, authController.register);
 router.post("/login", loginValidation, authController.login);
 router.get("/me", auth, authController.getCurrentUser);
 router.put("/profile", auth, authController.updateProfile);
+
 router.post(
   "/change-password",
   auth,
