@@ -172,17 +172,78 @@ exports.getCurrentUser = async (req, res) => {
 //   }
 // };
 
+// exports.updateProfile = [
+//   // Middleware to handle file uploads
+//   upload.single("resume"), // Assuming "resume" is the field name for the file
+//   async (req, res) => {
+//     console.log("update request", req.body); // This should now show the form fields
+//     console.log("Uploaded file", req.file); // This will show the uploaded file
+
+//     try {
+//       const updates = Object.keys(req.body);
+
+//       // Validation spécifique pour le champ phone
+//       if (req.body.phone && !/^\d{8}$/.test(req.body.phone)) {
+//         return res
+//           .status(400)
+//           .json({ message: "Phone must be exactly 8 numeric characters" });
+//       }
+
+//       const user = req.user; // Assuming you have middleware to get the authenticated user
+
+//       updates.forEach((update) => {
+//         user[update] = req.body[update];
+//       });
+
+//       // Handle the uploaded resume if it exists
+//       if (req.file) {
+//         // For example, save the file path in the user object
+//         user.profile = user.profile || {};
+//         user.profile.resume = req.file.path; // Save file path in `profile.resume`      }
+//       }
+//       await user.save();
+
+//       res.json({
+//         message: "Profile updated successfully",
+//         user,
+//       });
+//     } catch (error) {
+//       logger.error("Update profile error:", error);
+//       res.status(500).json({
+//         message: "Error updating profile",
+//         error:
+//           process.env.NODE_ENV === "development" ? error.message : undefined,
+//       });
+//     }
+//   },
+// ];
+
+
 exports.updateProfile = [
   // Middleware to handle file uploads
   upload.single("resume"), // Assuming "resume" is the field name for the file
   async (req, res) => {
-    console.log("update request", req.body); // This should now show the form fields
-    console.log("Uploaded file", req.file); // This will show the uploaded file
-
     try {
-      const updates = Object.keys(req.body);
+      console.log("Raw request body:", req.body); // Debugging
 
-      // Validation spécifique pour le champ phone
+      // Parse JSON fields
+      const fieldsToParse = ["education", "experience", "skills", "resumes"];
+      fieldsToParse.forEach((field) => {
+        if (req.body[field]) {
+          try {
+            req.body[field] = JSON.parse(req.body[field]);
+          } catch (err) {
+            console.error(`Error parsing ${field}:`, err.message);
+            return res
+              .status(400)
+              .json({ message: `Invalid JSON format for field: ${field}` });
+          }
+        }
+      });
+
+      console.log("Parsed request body:", req.body);
+
+      // Validation for specific fields (e.g., phone)
       if (req.body.phone && !/^\d{8}$/.test(req.body.phone)) {
         return res
           .status(400)
@@ -191,16 +252,19 @@ exports.updateProfile = [
 
       const user = req.user; // Assuming you have middleware to get the authenticated user
 
+      // Update user fields
+      const updates = Object.keys(req.body);
       updates.forEach((update) => {
         user[update] = req.body[update];
       });
 
       // Handle the uploaded resume if it exists
       if (req.file) {
-        // For example, save the file path in the user object
         user.profile = user.profile || {};
-        user.profile.resume = req.file.path; // Save file path in `profile.resume`      }
+        user.profile.resume = req.file.path; // Save file path in `profile.resume`
       }
+
+      // Save user changes to the database
       await user.save();
 
       res.json({
@@ -208,7 +272,7 @@ exports.updateProfile = [
         user,
       });
     } catch (error) {
-      logger.error("Update profile error:", error);
+      console.error("Update profile error:", error);
       res.status(500).json({
         message: "Error updating profile",
         error:
@@ -217,6 +281,7 @@ exports.updateProfile = [
     }
   },
 ];
+
 
 // Change password
 exports.changePassword = async (req, res) => {
