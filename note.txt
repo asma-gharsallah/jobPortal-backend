@@ -1,0 +1,6 @@
+backend model == > exp : number 
+jobs in database
+
+front : one input(type number) for experience instead of 2
+
+joblist => filter for regular user (non admin) to show only active jobs (controller server side)
