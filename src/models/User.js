@@ -15,12 +15,7 @@ const userSchema = new mongoose.Schema(
       trim: true,
       lowercase: true,
     },
-    phone: {
-      type: String,
-      unique: true,
-      trim: true,
-      lowercase: true,
-    },
+
     password: {
       type: String,
       required: true,
@@ -31,26 +26,6 @@ const userSchema = new mongoose.Schema(
       default: "user",
     },
 
-    location: String,
-    skills: [String],
-    education: [
-      {
-        institution: String,
-        degree: String,
-        field: String,
-        startDate: Date,
-        endDate: Date,
-      },
-    ],
-    experience: [
-      {
-        company: String,
-        position: String,
-        description: String,
-        startDate: Date,
-        endDate: Date,
-      },
-    ],
     resumes: [
       {
         name: String,

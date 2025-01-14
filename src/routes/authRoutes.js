@@ -9,12 +9,6 @@ const router = express.Router();
 const registerValidation = [
   body("name").trim().notEmpty().withMessage("Name is required"),
   body("email").isEmail().withMessage("Please enter a valid email"),
-  body("phone")
-    .trim()
-    .isLength({ min: 8, max: 8 })
-    .withMessage("Phone must be exactly 8 characters long")
-    .isNumeric()
-    .withMessage("Phone must contain only numbers"),
   body("password")
     .isLength({ min: 6 })
     .withMessage("Password must be at least 6 characters long"),

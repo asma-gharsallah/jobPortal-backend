@@ -21,7 +21,7 @@ exports.register = async (req, res) => {
       return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, password, phone } = req.body;
+    const { name, email, password } = req.body;
 
     // Check if user already exists
     const existingUser = await User.findOne({ email });
@@ -36,8 +36,8 @@ exports.register = async (req, res) => {
       name,
       email,
       password,
-      phone,
     });
+    console.log(user);
 
     await user.save();
 
@@ -127,7 +127,6 @@ exports.getCurrentUser = async (req, res) => {
 //     const updates = Object.keys(req.body);
 //     const allowedUpdates = [
 //       "name",
-//       "phone",
 //       "email",
 //       "location",
 //       "skills",
@@ -142,21 +141,7 @@ exports.getCurrentUser = async (req, res) => {
 //       return res.status(400).json({ message: "Invalid updates" });
 //     }
 
-//     // Validation spécifique pour le champ phone
-//     if (req.body.phone && !/^\d{8}$/.test(req.body.phone)) {
-//       return res
-//         .status(400)
-//         .json({ message: "Phone must be exactly 8 numeric characters" });
-//     }
-
-//     const user = req.user; //
-//     updates.forEach((update) => {
-//       if (update === "name" || update === "email" || update === "phone") {
-//         user[update] = req.body[update];
-//       } else {
-//         user.profile[update] = req.body[update];
-//       }
-//     });
+//
 
 //     await user.save();
 //     res.json({
@@ -182,13 +167,7 @@ exports.getCurrentUser = async (req, res) => {
 //     try {
 //       const updates = Object.keys(req.body);
 
-//       // Validation spécifique pour le champ phone
-//       if (req.body.phone && !/^\d{8}$/.test(req.body.phone)) {
-//         return res
-//           .status(400)
-//           .json({ message: "Phone must be exactly 8 numeric characters" });
-//       }
-
+//
 //       const user = req.user; // Assuming you have middleware to get the authenticated user
 
 //       updates.forEach((update) => {
@@ -218,11 +197,13 @@ exports.getCurrentUser = async (req, res) => {
 //   },
 // ];
 
-
 exports.updateProfile = [
   // Middleware to handle file uploads
-  upload.single("resume"), // Assuming "resume" is the field name for the file
+  upload.single("resumes"), // Assuming "resume" is the field name for the file
   async (req, res) => {
+    const file = req.file;
+    console.log(file);
+
     try {
       console.log("Raw request body:", req.body); // Debugging
 
@@ -243,14 +224,8 @@ exports.updateProfile = [
 
       console.log("Parsed request body:", req.body);
 
-      // Validation for specific fields (e.g., phone)
-      if (req.body.phone && !/^\d{8}$/.test(req.body.phone)) {
-        return res
-          .status(400)
-          .json({ message: "Phone must be exactly 8 numeric characters" });
-      }
-
       const user = req.user; // Assuming you have middleware to get the authenticated user
+      console.log("user to update", user);
 
       // Update user fields
       const updates = Object.keys(req.body);
@@ -260,8 +235,11 @@ exports.updateProfile = [
 
       // Handle the uploaded resume if it exists
       if (req.file) {
-        user.profile = user.profile || {};
-        user.profile.resume = req.file.path; // Save file path in `profile.resume`
+        user.resumes = {
+          name: req.file.originalname,
+          path: req.file.path,
+        };
+        console.log("upadted resumes array", user.resumes);
       }
 
       // Save user changes to the database
@@ -281,7 +259,6 @@ exports.updateProfile = [
     }
   },
 ];
-
 
 // Change password
 exports.changePassword = async (req, res) => {
