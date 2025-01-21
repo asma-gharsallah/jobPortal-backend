@@ -1,6 +1,7 @@
 # Job Portal API Documentation
 
 ## Base URL
+
 ```
 http://localhost:3001/api
 ```
@@ -8,6 +9,7 @@ http://localhost:3001/api
 ## Authentication Endpoints
 
 ### Register User
+
 ```http
 POST /auth/register
 
@@ -32,6 +34,7 @@ Response:
 ```
 
 ### Login
+
 ```http
 POST /auth/login
 
@@ -54,6 +57,7 @@ Response:
 ```
 
 ### Get Current User
+
 ```http
 GET /auth/me
 Headers: Authorization: Bearer jwt_token
@@ -70,6 +74,7 @@ Response:
 ## Jobs Endpoints
 
 ### Get All Jobs
+
 ```http
 GET /jobs
 Query Parameters:
@@ -92,6 +97,7 @@ Response:
 ```
 
 ### Get Job by ID
+
 ```http
 GET /jobs/:id
 
@@ -107,6 +113,7 @@ Response:
 ```
 
 ### Create Job
+
 ```http
 POST /jobs
 Headers: Authorization: Bearer jwt_token
@@ -140,13 +147,13 @@ Response:
 ```
 
 ### Apply for Job
+
 ```http
 POST /jobs/:id/apply
 Headers: Authorization: Bearer jwt_token
 
 Request Body:
 {
-  "resumeId": "resume_id",
   "coverLetter": "..."
 }
 
@@ -160,6 +167,7 @@ Response:
 ## Applications Endpoints
 
 ### Get User Applications
+
 ```http
 GET /applications/my-applications
 Headers: Authorization: Bearer jwt_token
@@ -177,6 +185,7 @@ Response:
 ```
 
 ### Get Job Applications (for employers)
+
 ```http
 GET /applications/jobs/:jobId/applications
 Headers: Authorization: Bearer jwt_token
@@ -195,6 +204,7 @@ Response:
 ```
 
 ### Update Application Status
+
 ```http
 PATCH /applications/:id/status
 Headers: Authorization: Bearer jwt_token
@@ -212,6 +222,7 @@ Response:
 ```
 
 ### Withdraw Application
+
 ```http
 POST /applications/my-applications/:id/withdraw
 Headers: Authorization: Bearer jwt_token
@@ -226,6 +237,7 @@ Response:
 ## Error Responses
 
 ### 400 Bad Request
+
 ```json
 {
   "message": "Error message here",
@@ -234,6 +246,7 @@ Response:
 ```
 
 ### 401 Unauthorized
+
 ```json
 {
   "message": "Please authenticate."
@@ -241,6 +254,7 @@ Response:
 ```
 
 ### 403 Forbidden
+
 ```json
 {
   "message": "Access denied."
@@ -248,6 +262,7 @@ Response:
 ```
 
 ### 404 Not Found
+
 ```json
 {
   "message": "Resource not found"
@@ -255,6 +270,7 @@ Response:
 ```
 
 ### 500 Server Error
+
 ```json
 {
   "message": "Internal server error",

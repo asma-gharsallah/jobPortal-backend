@@ -1,83 +1,84 @@
-const mongoose = require('mongoose');
+const mongoose = require("mongoose");
 
-const applicationSchema = new mongoose.Schema({
-  job: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Job',
-    required: true
-  },
-  applicant: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: true
-  },
-  resume: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Resume',
-    required: true
-  },
-  coverLetter: {
-    type: String,
-    required: true
-  },
-  status: {
-    type: String,
-    enum: ['pending', 'under_review', 'accepted', 'rejected', 'withdrawn'],
-    default: 'pending'
-  },
-  notes: [{
-    content: String,
-    createdBy: {
+const applicationSchema = new mongoose.Schema(
+  {
+    job: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+      ref: "Job",
+      required: true,
     },
-    createdAt: {
-      type: Date,
-      default: Date.now
-    }
-  }],
-  appliedAt: {
-    type: Date,
-    default: Date.now
-  },
-  lastStatusUpdate: {
-    type: Date,
-    default: Date.now
-  },
-  statusHistory: [{
+    applicant: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    coverLetter: {
+      type: String,
+      required: true,
+    },
     status: {
       type: String,
-      enum: ['pending', 'under_review', 'accepted', 'rejected', 'withdrawn']
+      enum: ["pending", "under_review", "accepted", "rejected", "withdrawn"],
+      default: "pending",
     },
-    updatedAt: {
+    notes: [
+      {
+        type: String,
+      },
+    ],
+    appliedAt: {
       type: Date,
-      default: Date.now
+      default: Date.now,
     },
-    updatedBy: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
-    }
-  }]
-}, {
-  timestamps: true
-});
+    lastStatusUpdate: {
+      type: Date,
+      default: Date.now,
+    },
+    statusHistory: [
+      {
+        status: {
+          type: String,
+          enum: [
+            "pending",
+            "under_review",
+            "accepted",
+            "rejected",
+            "withdrawn",
+          ],
+        },
+        updatedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        updatedBy: {
+          type: mongoose.Schema.Types.ObjectId,
+          ref: "User",
+        },
+      },
+    ],
+  },
+  {
+    timestamps: true,
+  }
+);
 
 // Add index for faster queries
 applicationSchema.index({ job: 1, applicant: 1 }, { unique: true });
 
 // Middleware to update lastStatusUpdate when status changes
-applicationSchema.pre('save', function(next) {
-  if (this.isModified('status')) {
+applicationSchema.pre("save", function (next) {
+  if (this.isModified("status")) {
     this.lastStatusUpdate = new Date();
     this.statusHistory.push({
       status: this.status,
       updatedAt: this.lastStatusUpdate,
-      updatedBy: this.updatedBy
+      updatedBy: this.updatedBy,
     });
   }
   next();
 });
 
-const Application = mongoose.model('Application', applicationSchema);
+const Application = mongoose.model("Application", applicationSchema);
 
 module.exports = Application;

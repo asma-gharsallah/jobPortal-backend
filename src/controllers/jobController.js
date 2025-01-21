@@ -24,14 +24,6 @@ exports.getAllJobs = async (req, res) => {
       filter.type = req.query.type;
     }
 
-    if (req.query.minSalary) {
-      filter["salary.min"] = { $gte: parseInt(req.query.minSalary) };
-    }
-
-    if (req.query.maxSalary) {
-      filter["salary.max"] = { $lte: parseInt(req.query.maxSalary) };
-    }
-
     if (req.query.search) {
       filter.$text = { $search: req.query.search };
     }
@@ -217,7 +209,6 @@ exports.applyForJob = async (req, res) => {
     const application = new Application({
       job: job._id,
       applicant: req.user._id,
-      resume: req.body.resumeId,
       coverLetter: req.body.coverLetter,
     });
 

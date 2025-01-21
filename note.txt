@@ -4,3 +4,50 @@ jobs in database
 front : one input(type number) for experience instead of 2
 
 joblist => filter for regular user (non admin) to show only active jobs (controller server side)
+
+
+
+-----------------
+1- application model => remove resume
+
+2- notes???
+    ---
+    answer:
+    Fundamental Difference Between coverLetter and notes
+    *coverLetter:
+        - Written by the applicant when submitting their application.
+        - Contains a general or tailored message explaining why they are a good fit for the position.
+    
+    *notes:
+        Written by recruiters or hiring team members during the evaluation process.
+        Used for adding internal comments, observations, or specific remarks about the application as it progresses.
+        Acts as an internal communication tool among the HR or recruitment team.
+    ---
+
+3- /api/job/:id/apply controller
+
+
+
+------
+split dashboard into two components:
+
+dashboard user: if application is ["pending", "under_review", "accepted", "rejected"] we show it, if application 
+is "withdrawn" we remove it from the list
+
+dashboard admin : the list should show by default ["pending", "under_review"] applications
+we add filters above the list to include ["accepted","rejected", "withdrawn"] applications
+
+final step: add pagination (low priority)
+
+
+seperate resume field from user model
+create model for resumes
+relationships:
+user has many resumes
+resume belongs to one user
+
+
+bug: cv being deleted in applications if its changed from user profile
+bug: update profile
+-----
+

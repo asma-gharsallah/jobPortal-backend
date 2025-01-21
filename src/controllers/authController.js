@@ -208,7 +208,7 @@ exports.updateProfile = [
       console.log("Raw request body:", req.body); // Debugging
 
       // Parse JSON fields
-      const fieldsToParse = ["education", "experience", "skills", "resumes"];
+      const fieldsToParse = ["resumes"];
       fieldsToParse.forEach((field) => {
         if (req.body[field]) {
           try {
@@ -229,6 +229,8 @@ exports.updateProfile = [
 
       // Update user fields
       const updates = Object.keys(req.body);
+      console.log("updates are", updates);
+
       updates.forEach((update) => {
         user[update] = req.body[update];
       });

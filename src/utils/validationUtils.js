@@ -125,7 +125,6 @@ exports.validationSchemas = {
 
   // Application submission validation
   application: [
-    body("resumeId").notEmpty().withMessage("Resume is required"),
     body("coverLetter")
       .trim()
       .notEmpty()
