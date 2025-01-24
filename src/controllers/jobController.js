@@ -1,6 +1,7 @@
 const Job = require("../models/Job");
 const Application = require("../models/Application");
 const logger = require("../config/logger");
+const { Resume } = require("../models/Resume");
 
 // Get all jobs with filters and pagination
 exports.getAllJobs = async (req, res) => {
@@ -33,7 +34,7 @@ exports.getAllJobs = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate("postedBy", "name company");
+      .populate("postedBy", "name");
 
     // Get total count for pagination
     const total = await Job.countDocuments(filter);
@@ -56,10 +57,7 @@ exports.getAllJobs = async (req, res) => {
 // Get single job by ID
 exports.getJobById = async (req, res) => {
   try {
-    const job = await Job.findById(req.params.id).populate(
-      "postedBy",
-      "name company"
-    );
+    const job = await Job.findById(req.params.id).populate("postedBy", "name");
 
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
@@ -210,6 +208,7 @@ exports.applyForJob = async (req, res) => {
       job: job._id,
       applicant: req.user._id,
       coverLetter: req.body.coverLetter,
+      resume: req.body.resumeId,
     });
 
     await application.save();

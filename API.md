@@ -105,7 +105,6 @@ Response:
 {
   "id": "job_id",
   "title": "Software Engineer",
-  "company": "Tech Corp",
   "description": "...",
   "requirements": [],
   "skills": []
@@ -121,7 +120,6 @@ Headers: Authorization: Bearer jwt_token
 Request Body:
 {
   "title": "Software Engineer",
-  "company": "Tech Corp",
   "location": "New York",
   "type": "Full-time",
   "category": "Software Development",

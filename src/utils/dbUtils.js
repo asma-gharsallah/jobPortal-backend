@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const logger = require('../config/logger');
+const mongoose = require("mongoose");
+const logger = require("../config/logger");
 
 /**
  * Initialize database connection
@@ -9,31 +9,31 @@ exports.initializeDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI, {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
     });
-    logger.info('Connected to MongoDB');
+    logger.info("Connected to MongoDB");
 
-    mongoose.connection.on('error', (err) => {
-      logger.error('MongoDB connection error:', err);
+    mongoose.connection.on("error", (err) => {
+      logger.error("MongoDB connection error:", err);
     });
 
-    mongoose.connection.on('disconnected', () => {
-      logger.warn('MongoDB disconnected');
+    mongoose.connection.on("disconnected", () => {
+      logger.warn("MongoDB disconnected");
     });
 
     // Handle process termination
-    process.on('SIGINT', async () => {
+    process.on("SIGINT", async () => {
       try {
         await mongoose.connection.close();
-        logger.info('MongoDB connection closed through app termination');
+        logger.info("MongoDB connection closed through app termination");
         process.exit(0);
       } catch (err) {
-        logger.error('Error closing MongoDB connection:', err);
+        logger.error("Error closing MongoDB connection:", err);
         process.exit(1);
       }
     });
   } catch (error) {
-    logger.error('Error connecting to MongoDB:', error);
+    logger.error("Error connecting to MongoDB:", error);
     process.exit(1);
   }
 };
@@ -45,28 +45,26 @@ exports.initializeDB = async () => {
 exports.createIndexes = async () => {
   try {
     // Ensure text indexes for job search
-    await mongoose.model('Job').collection.createIndex({
-      title: 'text',
-      company: 'text',
-      description: 'text',
-      skills: 'text'
+    await mongoose.model("Job").collection.createIndex({
+      title: "text",
+      company: "text",
+      description: "text",
+      skills: "text",
     });
 
     // Create compound index for applications
-    await mongoose.model('Application').collection.createIndex(
-      { job: 1, applicant: 1 },
-      { unique: true }
-    );
+    await mongoose
+      .model("Application")
+      .collection.createIndex({ job: 1, applicant: 1 }, { unique: true });
 
     // Create indexes for user email
-    await mongoose.model('User').collection.createIndex(
-      { email: 1 },
-      { unique: true }
-    );
+    await mongoose
+      .model("User")
+      .collection.createIndex({ email: 1 }, { unique: true });
 
-    logger.info('Database indexes created successfully');
+    logger.info("Database indexes created successfully");
   } catch (error) {
-    logger.error('Error creating database indexes:', error);
+    logger.error("Error creating database indexes:", error);
     throw error;
   }
 };
@@ -133,12 +131,12 @@ exports.bulkWrite = async (modelName, operations, options = {}) => {
     try {
       return await mongoose.model(modelName).bulkWrite(operations, {
         ordered: false,
-        ...options
+        ...options,
       });
     } catch (error) {
       lastError = error;
       if (attempt === maxRetries) break;
-      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      await new Promise((resolve) => setTimeout(resolve, 1000 * attempt));
     }
   }
 
@@ -153,20 +151,20 @@ exports.checkHealth = async () => {
   try {
     const status = {
       connected: mongoose.connection.readyState === 1,
-      status: 'healthy'
+      status: "healthy",
     };
 
     if (!status.connected) {
-      status.status = 'unhealthy';
-      status.error = 'Database not connected';
+      status.status = "unhealthy";
+      status.error = "Database not connected";
     }
 
     return status;
   } catch (error) {
     return {
       connected: false,
-      status: 'unhealthy',
-      error: error.message
+      status: "unhealthy",
+      error: error.message,
     };
   }
 };

@@ -9,7 +9,6 @@ const router = express.Router();
 // Job creation/update validation
 const jobValidation = [
   body("title").trim().notEmpty().withMessage("Job title is required"),
-  body("company").trim().notEmpty().withMessage("Company name is required"),
   body("location").trim().notEmpty().withMessage("Location is required"),
   body("description")
     .trim()
@@ -70,7 +69,13 @@ router.delete("/:id", auth, jobController.deleteJob);
 router.post(
   "/:id/apply",
   auth,
-  body("coverLetter").trim().notEmpty().withMessage("Cover letter is required"),
+  [
+    body("coverLetter")
+      .trim()
+      .notEmpty()
+      .withMessage("Cover letter is required"),
+    body("resumeId").trim().notEmpty().withMessage("resumeId is required"),
+  ],
   jobController.applyForJob
 );
 

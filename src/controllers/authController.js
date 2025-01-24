@@ -1,12 +1,12 @@
-const jwt = require("jsonwebtoken"); //importer la bibliothèque
+const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const User = require("../models/User");
 const logger = require("../config/logger");
 const multer = require("multer");
 const upload = multer({ dest: "uploads/" }); // Or configure storage as needed
+const Resume = require("../models/Resume");
 
 // Generate JWT token
-//Créer un token JWT pour l’utilisateur : userId (ID unique de l'utilisateur)
 const generateToken = (userId) => {
   return jwt.sign({ userId }, process.env.JWT_SECRET, {
     expiresIn: "7d",
@@ -37,12 +37,10 @@ exports.register = async (req, res) => {
       email,
       password,
     });
-    console.log(user);
 
     await user.save();
 
     // Generate token
-    //Lorsqu'un utilisateur s’inscrit, un token JWT est généré et envoyé au client : l'utilisateur reste authentifié directement après l'inscription
     const token = generateToken(user._id);
 
     res.status(201).json({
@@ -86,7 +84,6 @@ exports.login = async (req, res) => {
     }
 
     // Generate token
-    //Génère un token JWT valide : Permet au client de prouver son identité lors des requêtes suivantes
     const token = generateToken(user._id);
 
     res.json({
@@ -106,7 +103,7 @@ exports.login = async (req, res) => {
 // Get current user
 exports.getCurrentUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user._id) //Cette route nécessite un token valide envoyé par le client : déchiffre le token et ajoute userId à req.use ;  déchiffre le token et ajoute userId à req.use
+    const user = await User.findById(req.user._id) // This assumes you have middleware to decode the JWT and add the user info to the request object.
       .select("-password")
       .populate("applications");
 
@@ -121,127 +118,36 @@ exports.getCurrentUser = async (req, res) => {
 };
 
 // Update user profile
-// exports.updateProfile = async (req, res) => {
-//   console.log("update request", req.body);
-//   try {
-//     const updates = Object.keys(req.body);
-//     const allowedUpdates = [
-//       "name",
-//       "email",
-//       "location",
-//       "skills",
-//       "education",
-//       "experience",
-//     ];
-//     const isValidOperation = updates.every((update) =>
-//       allowedUpdates.includes(update)
-//     );
-
-//     if (!isValidOperation) {
-//       return res.status(400).json({ message: "Invalid updates" });
-//     }
-
-//
-
-//     await user.save();
-//     res.json({
-//       message: "Profile updated successfully",
-//       user,
-//     });
-//   } catch (error) {
-//     logger.error("Update profile error:", error);
-//     res.status(500).json({
-//       message: "Error updating profile",
-//       error: process.env.NODE_ENV === "development" ? error.message : undefined,
-//     });
-//   }
-// };
-
-// exports.updateProfile = [
-//   // Middleware to handle file uploads
-//   upload.single("resume"), // Assuming "resume" is the field name for the file
-//   async (req, res) => {
-//     console.log("update request", req.body); // This should now show the form fields
-//     console.log("Uploaded file", req.file); // This will show the uploaded file
-
-//     try {
-//       const updates = Object.keys(req.body);
-
-//
-//       const user = req.user; // Assuming you have middleware to get the authenticated user
-
-//       updates.forEach((update) => {
-//         user[update] = req.body[update];
-//       });
-
-//       // Handle the uploaded resume if it exists
-//       if (req.file) {
-//         // For example, save the file path in the user object
-//         user.profile = user.profile || {};
-//         user.profile.resume = req.file.path; // Save file path in `profile.resume`      }
-//       }
-//       await user.save();
-
-//       res.json({
-//         message: "Profile updated successfully",
-//         user,
-//       });
-//     } catch (error) {
-//       logger.error("Update profile error:", error);
-//       res.status(500).json({
-//         message: "Error updating profile",
-//         error:
-//           process.env.NODE_ENV === "development" ? error.message : undefined,
-//       });
-//     }
-//   },
-// ];
-
 exports.updateProfile = [
   // Middleware to handle file uploads
-  upload.single("resumes"), // Assuming "resume" is the field name for the file
+  upload.single("file"), // "file" is the name of the input field for file upload
   async (req, res) => {
-    const file = req.file;
-    console.log(file);
-
     try {
-      console.log("Raw request body:", req.body); // Debugging
-
-      // Parse JSON fields
-      const fieldsToParse = ["resumes"];
-      fieldsToParse.forEach((field) => {
-        if (req.body[field]) {
-          try {
-            req.body[field] = JSON.parse(req.body[field]);
-          } catch (err) {
-            console.error(`Error parsing ${field}:`, err.message);
-            return res
-              .status(400)
-              .json({ message: `Invalid JSON format for field: ${field}` });
-          }
-        }
-      });
-
-      console.log("Parsed request body:", req.body);
-
-      const user = req.user; // Assuming you have middleware to get the authenticated user
+      const user = req.user; // Assuming you have middleware to extract the user from the token
       console.log("user to update", user);
 
-      // Update user fields
       const updates = Object.keys(req.body);
-      console.log("updates are", updates);
-
       updates.forEach((update) => {
-        user[update] = req.body[update];
+        if (req.body[update]) {
+          user[update] = req.body[update]; // Update user fields from request body
+        }
       });
 
       // Handle the uploaded resume if it exists
       if (req.file) {
-        user.resumes = {
+        // Create a new Resume entry in the database
+        const newResume = new Resume({
           name: req.file.originalname,
           path: req.file.path,
-        };
-        console.log("upadted resumes array", user.resumes);
+          applicant: user._id, // Link the resume to the user
+        });
+
+        // Save the resume to the database
+        await newResume.save();
+
+        // Add the new resume to the user's resumes array
+        user.resumes.push(newResume._id);
+        console.log("Updated resumes array", user.resumes);
       }
 
       // Save user changes to the database

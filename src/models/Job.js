@@ -7,11 +7,6 @@ const jobSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
-    company: {
-      type: String,
-      required: true,
-      trim: true,
-    },
     location: {
       type: String,
       required: true,
@@ -99,7 +94,6 @@ const jobSchema = new mongoose.Schema(
 // Add text index for search functionality
 jobSchema.index({
   title: "text",
-  company: "text",
   location: "text",
   description: "text",
   skills: "text",

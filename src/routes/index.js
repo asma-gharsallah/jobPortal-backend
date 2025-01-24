@@ -3,6 +3,7 @@ const authRoutes = require("./authRoutes");
 const jobRoutes = require("./jobRoutes");
 const applicationRoutes = require("./applicationRoutes");
 const utilityRoutes = require("./utilityRoutes");
+const resumeRoutes = require("./resumeRoutes");
 
 const router = express.Router();
 
@@ -11,6 +12,7 @@ router.use("/auth", authRoutes);
 router.use("/jobs", jobRoutes);
 router.use("/applications", applicationRoutes);
 router.use("/utility", utilityRoutes);
+router.use("/resume", resumeRoutes);
 
 // API Documentation
 router.get("/", (req, res) => {

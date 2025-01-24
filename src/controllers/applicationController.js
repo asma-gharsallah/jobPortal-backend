@@ -15,7 +15,7 @@ exports.getUserApplications = async (req, res) => {
       .limit(limit)
       .populate({
         path: "job",
-        select: "title company location type salary",
+        select: "title location type salary",
       });
 
     const total = await Application.countDocuments({ applicant: req.user._id });
@@ -41,10 +41,15 @@ exports.getApplicationById = async (req, res) => {
     const application = await Application.findOne({
       _id: req.params.id,
       applicant: req.user._id,
-    }).populate({
-      path: "job",
-      select: "title company location",
-    });
+    })
+      .populate({
+        path: "job",
+        select: "title location",
+      })
+      .populate({
+        path: "resume",
+        select: "name path",
+      });
 
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
@@ -88,11 +93,15 @@ exports.getJobApplications = async (req, res) => {
       .limit(limit)
       .populate({
         path: "applicant",
-        select: "name email resumes",
+        select: "name email ",
       })
       .populate({
         path: "job",
         select: "title",
+      })
+      .populate({
+        path: "resume",
+        select: "name path",
       });
     const total = await Application.countDocuments(filter);
 
@@ -247,7 +256,12 @@ exports.getApplicationsById = async (req, res) => {
       .populate({
         path: "applicant",
         select: "name email resumes",
+      })
+      .populate({
+        path: "resume",
+        select: "name path",
       });
+
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
     }

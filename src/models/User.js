@@ -28,12 +28,8 @@ const userSchema = new mongoose.Schema(
 
     resumes: [
       {
-        name: String,
-        path: String,
-        uploadedAt: {
-          type: Date,
-          default: Date.now,
-        },
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Resume",
       },
     ],
     applications: [
