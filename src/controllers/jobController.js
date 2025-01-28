@@ -198,7 +198,7 @@ exports.applyForJob = async (req, res) => {
       applicant: req.user._id,
     });
 
-    if (existingApplication) {
+    if (existingApplication && existingApplication.status !== "withdrawn") {
       return res
         .status(400)
         .json({ message: "You have already applied for this job" });

@@ -72,7 +72,10 @@ const applicationSchema = new mongoose.Schema(
 );
 
 // Add index for faster queries
-applicationSchema.index({ job: 1, applicant: 1 }, { unique: true });
+applicationSchema.index(
+  { job: 1, applicant: 1 },
+  { unique: true, partialFilterExpression: { status: { $ne: "withdrawn" } } }
+);
 
 // Middleware to update lastStatusUpdate when status changes
 applicationSchema.pre("save", function (next) {
