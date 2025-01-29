@@ -96,45 +96,45 @@ exports.getResumesByUser = async (req, res) => {
   }
 };
 
-// Update a resume's name or file
-// exports.updateResume = async (req, res) => {
-//   try {
-//     const { name } = req.body;
-//     const resumeId = req.params.resumeId;
+//Update a resume's name or file
+exports.updateResume = async (req, res) => {
+  try {
+    const { name } = req.body;
+    const resumeId = req.params.resumeId;
 
-//     // Find the resume by ID
-//     const resume = await Resume.findById(resumeId);
-//     if (!resume) {
-//       return res.status(404).json({ message: "Resume not found" });
-//     }
+    // Find the resume by ID
+    const resume = await Resume.findById(resumeId);
+    if (!resume) {
+      return res.status(404).json({ message: "Resume not found" });
+    }
 
-//     // Update the resume name (or other properties as needed)
-//     if (name) resume.name = name;
+    // Update the resume name (or other properties as needed)
+    if (name) resume.name = name;
 
-//     // If a new file is uploaded, handle the file upload and replace the old file
-//     if (req.file) {
-//       // Delete the old file from the server
-//       fs.unlink(resume.path, (err) => {
-//         if (err) {
-//           console.error("File deletion error:", err);
-//           return res
-//             .status(500)
-//             .json({ message: "Error deleting the old file" });
-//         }
-//       });
+    // If a new file is uploaded, handle the file upload and replace the old file
+    if (req.file) {
+      // Delete the old file from the server
+      fs.unlink(resume.path, (err) => {
+        if (err) {
+          console.error("File deletion error:", err);
+          return res
+            .status(500)
+            .json({ message: "Error deleting the old file" });
+        }
+      });
 
-//       // Update the resume file path with the new file path
-//       resume.path = req.file.path;
-//     }
+      // Update the resume file path with the new file path
+      resume.path = req.file.path;
+    }
 
-//     await resume.save(); // Save the updated resume
+    await resume.save(); // Save the updated resume
 
-//     res.status(200).json(resume); // Return the updated resume
-//   } catch (err) {
-//     console.error(err);
-//     res.status(500).json({ message: "Error updating the resume" });
-//   }
-// };
+    res.status(200).json(resume); // Return the updated resume
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Error updating the resume" });
+  }
+};
 
 // Delete a resume and its associated file
 exports.deleteResume = async (req, res) => {

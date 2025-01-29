@@ -32,8 +32,6 @@ router.get(
   resumeController.getResumesByUser
 );
 
-{
-  /*
 // route pour récupérer un résumé par son ID
 router.get("/:resumeId", async (req, res) => {
   try {
@@ -46,8 +44,6 @@ router.get("/:resumeId", async (req, res) => {
     res.status(500).json({ message: "Server error" });
   }
 });
-*/
-}
 
 // Supprimer un résumé et son fichier
 router.delete(
@@ -56,5 +52,8 @@ router.delete(
   resumeIdValidation,
   resumeController.deleteResume
 );
+
+// Route pour récupérer un résumé par son ID
+router.get("/:resumeId", resumeIdValidation, resumeController.viewCV);
 
 module.exports = router;
