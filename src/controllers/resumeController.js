@@ -2,8 +2,9 @@ const Resume = require("../models/Resume");
 const User = require("../models/User");
 const multer = require("multer");
 const path = require("path");
-const fs = require("fs"); // To delete files from the server
+const fs = require("fs").promises;
 const { unlink } = require("fs/promises");
+const Application = require("../models/Application");
 
 // Multer configuration for file upload (PDF, DOC, DOCX)
 const storage = multer.diskStorage({
@@ -97,77 +98,76 @@ exports.getResumesByUser = async (req, res) => {
 };
 
 //Update a resume's name or file
-exports.updateResume = async (req, res) => {
-  try {
-    const { name } = req.body;
-    const resumeId = req.params.resumeId;
+// exports.updateResume = async (req, res) => {
+//   try {
+//     const { name } = req.body;
+//     const resumeId = req.params.resumeId;
 
-    // Find the resume by ID
-    const resume = await Resume.findById(resumeId);
-    if (!resume) {
-      return res.status(404).json({ message: "Resume not found" });
-    }
+//     // Find the resume by ID
+//     const resume = await Resume.findById(resumeId);
+//     if (!resume) {
+//       return res.status(404).json({ message: "Resume not found" });
+//     }
 
-    // Update the resume name (or other properties as needed)
-    if (name) resume.name = name;
+//     // Update the resume name (or other properties as needed)
+//     if (name) resume.name = name;
 
-    // If a new file is uploaded, handle the file upload and replace the old file
-    if (req.file) {
-      // Delete the old file from the server
-      fs.unlink(resume.path, (err) => {
-        if (err) {
-          console.error("File deletion error:", err);
-          return res
-            .status(500)
-            .json({ message: "Error deleting the old file" });
-        }
-      });
+//     // If a new file is uploaded, handle the file upload and replace the old file
+//     if (req.file) {
+//       // Delete the old file from the server
+//       fs.unlink(resume.path, (err) => {
+//         if (err) {
+//           console.error("File deletion error:", err);
+//           return res
+//             .status(500)
+//             .json({ message: "Error deleting the old file" });
+//         }
+//       });
 
-      // Update the resume file path with the new file path
-      resume.path = req.file.path;
-    }
+//       // Update the resume file path with the new file path
+//       resume.path = req.file.path;
+//     }
 
-    await resume.save(); // Save the updated resume
+//     await resume.save(); // Save the updated resume
 
-    res.status(200).json(resume); // Return the updated resume
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Error updating the resume" });
-  }
-};
+//     res.status(200).json(resume); // Return the updated resume
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json({ message: "Error updating the resume" });
+//   }
+// };
 
 // Delete a resume and its associated file
 exports.deleteResume = async (req, res) => {
   try {
-    // Find and delete the resume
-    const resume = await Resume.findByIdAndDelete(req.params.resumeId);
-    console.log("resume to delete", resume);
+    const resume = await Resume.findById(req.params.resumeId);
 
     if (!resume) {
       return res.status(404).json({ message: "Resume not found" });
     }
 
-    // Delete the file from the server
-    await unlink(resume.path, (err) => {
-      if (err) {
-        console.error("File deletion error:", err);
-        return res.status(500).json({ message: "Error deleting the file" });
+    // Vérifier si le CV a des applications associées
+    if (resume.application && resume.application.length > 0) {
+      // Vérifier si l'utilisateur a confirmé la suppression
+      if (!req.body.confirmDelete) {
+        return res.status(409).json({
+          message:
+            "This resume has associated applications. Deleting it will also delete all related applications. Do you want to proceed?",
+          resumeId: resume._id,
+          applicationIds: resume.application,
+        });
       }
+
+      // Supprimer les applications associées si l'utilisateur a confirmé
+      await Application.deleteMany({ _id: { $in: resume.application } });
+    }
+
+    // Supprimer le CV
+    await Resume.findByIdAndDelete(req.params.resumeId);
+
+    res.status(200).json({
+      message: "Resume deleted successfully",
     });
-
-    // Remove the resume from the user's resumes list
-    const user = await User.findById(resume.applicant);
-    user.resumes = user.resumes.filter(
-      (r) => r.toString() !== resume._id.toString()
-    );
-    console.log("user resumes after deletion", user.resumes);
-
-    await user.save();
-
-    // Delete the resume from the database
-    // await resume.remove();
-
-    res.status(200).json({ message: "Resume deleted successfully" });
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Error deleting the resume" });

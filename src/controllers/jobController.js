@@ -1,7 +1,7 @@
 const Job = require("../models/Job");
 const Application = require("../models/Application");
 const logger = require("../config/logger");
-const { Resume } = require("../models/Resume");
+const Resume = require("../models/Resume");
 
 // Get all jobs with filters and pagination
 exports.getAllJobs = async (req, res) => {
@@ -181,6 +181,12 @@ exports.deleteJob = async (req, res) => {
 // Apply for a job
 exports.applyForJob = async (req, res) => {
   try {
+    const { resumeId, coverLetter } = req.body;
+
+    if (!resumeId) {
+      return res.status(400).json({ message: "Resume ID is required" });
+    }
+
     const job = await Job.findById(req.params.id);
     if (!job) {
       return res.status(404).json({ message: "Job not found" });
@@ -196,6 +202,7 @@ exports.applyForJob = async (req, res) => {
     const existingApplication = await Application.findOne({
       job: job._id,
       applicant: req.user._id,
+      resume: resumeId,
     });
 
     if (existingApplication && existingApplication.status !== "withdrawn") {
@@ -204,6 +211,7 @@ exports.applyForJob = async (req, res) => {
         .json({ message: "You have already applied for this job" });
     }
 
+    // Créer une nouvelle application
     const application = new Application({
       job: job._id,
       applicant: req.user._id,
@@ -213,11 +221,13 @@ exports.applyForJob = async (req, res) => {
 
     await application.save();
 
-    // Update job and user with new application
-    job.applications.push(application._id);
-    await job.save();
+    // 🔹 Ajout sécurisé de l'application dans le CV
+    await Resume.findByIdAndUpdate(resumeId, {
+      $push: { application: application._id },
+    });
 
     req.user.applications.push(application._id);
+
     await req.user.save();
 
     res.status(201).json({

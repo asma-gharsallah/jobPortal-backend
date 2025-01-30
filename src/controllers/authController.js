@@ -3,8 +3,11 @@ const { validationResult } = require("express-validator");
 const User = require("../models/User");
 const logger = require("../config/logger");
 const multer = require("multer");
-const upload = multer({ dest: "uploads/" }); // Or configure storage as needed
 const Resume = require("../models/Resume");
+const upload = require("../middleware/upload");
+const { v4: uuidv4 } = require("uuid");
+const path = require("path");
+const fs = require("fs");
 
 // Generate JWT token
 const generateToken = (userId) => {
@@ -117,56 +120,58 @@ exports.getCurrentUser = async (req, res) => {
   }
 };
 
-// Update user profile
-exports.updateProfile = [
-  // Middleware to handle file uploads
-  upload.single("file"), // "file" is the name of the input field for file upload
-  async (req, res) => {
-    try {
-      const user = req.user; // Assuming you have middleware to extract the user from the token
-      console.log("user to update", user);
+// Update profile and handle CV upload
+exports.updateProfile = async (req, res) => {
+  try {
+    const user = req.user; // Assuming you have middleware to extract the user from the token
+    console.log("user to update", user);
 
-      const updates = Object.keys(req.body);
-      updates.forEach((update) => {
-        if (req.body[update]) {
-          user[update] = req.body[update]; // Update user fields from request body
-        }
-      });
-
-      // Handle the uploaded resume if it exists
-      if (req.file) {
-        // Create a new Resume entry in the database
-        const newResume = new Resume({
-          name: req.file.originalname,
-          path: req.file.path,
-          applicant: user._id, // Link the resume to the user
-        });
-
-        // Save the resume to the database
-        await newResume.save();
-
-        // Add the new resume to the user's resumes array
-        user.resumes.push(newResume._id);
-        console.log("Updated resumes array", user.resumes);
+    const updates = Object.keys(req.body);
+    updates.forEach((update) => {
+      if (req.body[update]) {
+        user[update] = req.body[update]; // Update user fields from request body
       }
+    });
 
-      // Save user changes to the database
-      await user.save();
+    // Gestion du fichier uploadé
+    if (req.file) {
+      const fileExtension = path.extname(req.file.originalname);
+      const uniqueFileName = `${uuidv4()}${fileExtension}`;
+      const filePath = path.join("uploads", uniqueFileName);
 
-      res.json({
-        message: "Profile updated successfully",
-        user,
+      // Déplacer et renommer le fichier
+      fs.renameSync(req.file.path, filePath);
+
+      // Enregistrement du nouveau CV
+      const newResume = new Resume({
+        name: req.file.originalname,
+        path: filePath,
+        applicant: user._id,
       });
-    } catch (error) {
-      console.error("Update profile error:", error);
-      res.status(500).json({
-        message: "Error updating profile",
-        error:
-          process.env.NODE_ENV === "development" ? error.message : undefined,
-      });
+
+      // Enregistrer en base de données
+      await newResume.save();
+
+      // Ajouter le nouveau CV sans supprimer les anciens
+
+      user.resumes.push(newResume._id); // Ajouter le nouveau CV sans supprimer les anciens
     }
-  },
-];
+
+    // Sauvegarder les modifications de l'utilisateur
+    await user.save();
+
+    res.json({
+      message: "Profil mis à jour avec succès",
+      user,
+    });
+  } catch (error) {
+    console.error("Erreur lors de la mise à jour du profil :", error);
+    res.status(500).json({
+      message: "Erreur lors de la mise à jour du profil",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
 
 // Change password
 exports.changePassword = async (req, res) => {

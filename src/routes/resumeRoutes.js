@@ -54,6 +54,5 @@ router.delete(
 );
 
 // Route pour récupérer un résumé par son ID
-router.get("/:resumeId", resumeIdValidation, resumeController.viewCV);
 
 module.exports = router;

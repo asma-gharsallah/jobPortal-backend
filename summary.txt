@@ -1,0 +1,25 @@
+planning (diagrams...)
+
+backend
+(ex: Express js, mongoDB)
+---
+1- establish a server running on a chosen port: 5000
+2- connect to a database
+3- create models
+4- create routes for each models
+5- create controllers for each route
+6- create middlewares if needed
+7- test
+
+frontend
+(ex: React js)
+---
+baics: 
+- React is javaScript library to createa a single page application
+- component based
+- virtual DOM
+- JSX 
+- props
+- state
+- hooks
+- routing

@@ -2,6 +2,7 @@ const express = require("express");
 const { body } = require("express-validator");
 const authController = require("../controllers/authController");
 const { auth } = require("../middleware/auth");
+const upload = require("../middleware/upload"); // Assurez-vous d'importer multer
 
 const router = express.Router();
 
@@ -34,7 +35,12 @@ const passwordChangeValidation = [
 router.post("/register", registerValidation, authController.register);
 router.post("/login", loginValidation, authController.login);
 router.get("/me", auth, authController.getCurrentUser);
-router.put("/profile", auth, authController.updateProfile);
+router.put(
+  "/profile",
+  auth,
+  upload.single("file"),
+  authController.updateProfile
+);
 
 router.post(
   "/change-password",
