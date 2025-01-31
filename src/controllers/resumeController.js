@@ -152,7 +152,9 @@ exports.deleteResume = async (req, res) => {
       if (!req.body.confirmDelete) {
         return res.status(409).json({
           message:
-            "This resume has associated applications. Deleting it will also delete all related applications. Do you want to proceed?",
+            "This resume has associated " +
+            resume.application.length +
+            " applications. Deleting it will also delete all related applications. Do you want to proceed?",
           resumeId: resume._id,
           applicationIds: resume.application,
         });
