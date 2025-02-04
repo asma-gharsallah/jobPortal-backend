@@ -251,7 +251,8 @@ exports.getApplicationsById = async (req, res) => {
     const application = await Application.findById(id)
       .populate({
         path: "job",
-        select: "title  location description requirements skills",
+        select:
+          "title  location description requirements responsibilities skills",
       })
       .populate({
         path: "applicant",
